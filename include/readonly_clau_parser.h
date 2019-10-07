@@ -600,7 +600,9 @@ namespace wiz {
 		public:
 			Node* Get();
 		public:
-			virtual ~MemoryPool();
+			virtual ~MemoryPool(); //
+
+			void Clear();
 	};
 	
 
@@ -834,6 +836,36 @@ namespace wiz {
 		static bool __LoadData(const char* buffer, const long long* token_arr, long long token_arr_len, Node* _global, const wiz::LoadDataOption* _option,
 			int start_state, int last_state, Node** next, MemoryPool* _pool) // first, strVec.empty() must be true!!
 		{
+			long long count_left = 0;
+			long long count_eq = 0;
+			long long count_ = 0;
+
+			for (long long x = 0; x < token_arr_len; ++x) {
+				switch (Utility::GetType(token_arr[x]))
+				{
+				case 0:
+					count_++;
+					break;
+				case 1:
+					count_left++;
+					break;
+				case 3:
+					count_eq++;
+					break;
+				}
+			}
+
+			// chk count_ - count_eq + count_left < 0 ?
+
+#ifdef USE_POOL
+			_pool->arr = new Node[1 + count_ - count_eq + count_left];
+			_pool->count = 0;
+			_pool->size = 1 + count_ - count_eq + count_left;
+#else
+			_pool->arr = nullptr;
+			_pool->count = 0;
+			_pool->size = 0;
+#endif
 			MemoryPool& pool = *_pool;
 
 			std::vector<long long> varVec;
@@ -1092,7 +1124,7 @@ namespace wiz {
 			return -1;
 		}
 
-		static bool _LoadData(InFileReserver& reserver, Node* global, const wiz::LoadDataOption& option, char** _buffer, const int lex_thr_num, const int parse_num) // first, strVec.empty() must be true!!
+		static bool _LoadData(InFileReserver& reserver, Node* global, const wiz::LoadDataOption& option, char** _buffer, std::vector<wiz::MemoryPool>* _pool, const int lex_thr_num, const int parse_num) // first, strVec.empty() must be true!!
 		{
 			const int pivot_num = parse_num - 1;
 			char* buffer = nullptr;
@@ -1147,12 +1179,6 @@ namespace wiz {
 
 				{
 					std::vector<MemoryPool> pool(pivots.size() + 1);
-					/*
-					for (int i = 0; i < pivots.size() + 1; ++i) {
-						pool[i].arr = new Node[5000000];
-						pool[i].count = 0;
-						pool[i].size = 5000000;
-					}*/
 
 					std::vector<Node> __global(pivots.size() + 1);
 
@@ -1161,6 +1187,7 @@ namespace wiz {
 					{
 						long long idx = pivots.empty() ? num - 1 : pivots[0];
 						long long _token_arr_len = idx - 0 + 1;
+
 
 						thr[0] = std::thread(__LoadData, buffer, token_arr, _token_arr_len, &__global[0], &option, 0, 0, &next[0], &pool[0]);
 					}
@@ -1220,10 +1247,14 @@ namespace wiz {
 						}
 
 						_global = __global[0];
+						*_pool = pool;
 					}
 					catch (...) {
 						delete[] token_arr;
 						delete[] buffer;
+						for (auto& x : pool) {
+							x.Clear();
+						}
 						buffer = nullptr;
 						throw "in Merge, error";
 					}
@@ -1240,7 +1271,7 @@ namespace wiz {
 			return true;
 		}
 	public:
-		static bool LoadDataFromFile(const std::string& fileName, Node* global, char** _buffer, int lex_thr_num = 0, int parse_num = 0) /// global should be empty
+		static bool LoadDataFromFile(const std::string& fileName, Node* global, char** _buffer, std::vector<wiz::MemoryPool>* pool, int lex_thr_num = 0, int parse_num = 0) /// global should be empty
 		{
 			if (lex_thr_num <= 0) {
 				lex_thr_num = std::thread::hardware_concurrency();
@@ -1280,7 +1311,7 @@ namespace wiz {
 				ifReserver.Num = 1 << 19;
 				//	strVec.reserve(ifReserver.Num);
 				// cf) empty file..
-				if (false == _LoadData(ifReserver, &globalTemp, option, _buffer, lex_thr_num, parse_num))
+				if (false == _LoadData(ifReserver, &globalTemp, option, _buffer, pool, lex_thr_num, parse_num))
 				{
 					inFile.close();
 					return false; // return true?
@@ -1288,20 +1319,48 @@ namespace wiz {
 
 				inFile.close();
 			}
-			catch (const char* err) { std::cout << err << "\n"; inFile.close(); return false; }
-			catch (const std::string & e) { std::cout << e << "\n"; inFile.close(); return false; }
-			catch (std::exception e) { std::cout << e.what() << "\n"; inFile.close(); return false; }
-			catch (...) { std::cout << "not expected error" << "\n"; inFile.close(); return false; }
+			catch (const char* err) {
+				std::cout << err << "\n"; inFile.close();
+				for (auto& x : *pool) {
+					x.Clear();
+				}
+				pool->clear();
+				return false;
+			}
+			catch (const std::string & e) {
+				std::cout << e << "\n"; inFile.close();
+				for (auto& x : *pool) {
+					x.Clear();
+				}
+				pool->clear();
+				return false;
+			}
+			catch (std::exception e) {
+				std::cout << e.what() << "\n"; inFile.close();
+				for (auto& x : *pool) {
+					x.Clear();
+				}
+				pool->clear();
+				return false;
+			}
+			catch (...) {
+				std::cout << "not expected error" << "\n"; inFile.close();
+				for (auto& x : *pool) {
+					x.Clear();
+				}
+				pool->clear();
+				return false;
+			}
 
 
 			*global = globalTemp;
 			return true;
 		}
-		static bool LoadWizDB(Node* global, const std::string& fileName, char** buffer, const int thr_num) {
+		static bool LoadWizDB(Node* global, const std::string& fileName, char** buffer, std::vector<wiz::MemoryPool>* pool, const int thr_num) {
 			Node globalTemp;
 
 			// Scan + Parse 
-			if (false == LoadDataFromFile(fileName, &globalTemp, buffer, thr_num, thr_num)) { return false; }
+			if (false == LoadDataFromFile(fileName, &globalTemp, buffer, pool, thr_num, thr_num)) { return false; }
 			//std::cout << "LoadData End" << "\n";
 
 			*global = globalTemp;
