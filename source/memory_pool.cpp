@@ -10,22 +10,32 @@ namespace wiz {
 		size = _size;
 	}
 	Node* MemoryPool::Get() {
-		return new Node();
+		if (size < 0) {
+			return new Node();
+		}
+
 
 		if (count < size) {
 			count++;
 			return &arr[count - 1];
 		}
 		else {
+			count++; // for number check..
 			else_list.push_back(new Node());
 			return else_list.back();
 		}
 	}
 	MemoryPool::~MemoryPool() {
-		//delete[] arr;
-		//Node* temp;
-		//for (Node* x : else_list) {
-		//	delete x;
-		//}
+		//
+	}
+	
+	void MemoryPool::Clear() {
+		if (arr) {
+			delete[] arr;
+			Node* temp;
+			for (Node* x : else_list) {
+				delete x;
+			}
+		}
 	}
 }
