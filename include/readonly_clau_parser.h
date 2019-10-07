@@ -1147,12 +1147,12 @@ namespace wiz {
 
 				{
 					std::vector<MemoryPool> pool(pivots.size() + 1);
-
+					/*
 					for (int i = 0; i < pivots.size() + 1; ++i) {
-						pool[i].arr = new Node[100000];
+						pool[i].arr = new Node[5000000];
 						pool[i].count = 0;
-						pool[i].size = 100000;
-					}
+						pool[i].size = 5000000;
+					}*/
 
 					std::vector<Node> __global(pivots.size() + 1);
 
