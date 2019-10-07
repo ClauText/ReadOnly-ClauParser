@@ -10,6 +10,8 @@ namespace wiz {
 		size = _size;
 	}
 	Node* MemoryPool::Get() {
+		return new Node();
+
 		if (count < size) {
 			count++;
 			return &arr[count - 1];
@@ -20,10 +22,10 @@ namespace wiz {
 		}
 	}
 	MemoryPool::~MemoryPool() {
-		delete[] arr;
-		Node* temp;
-		for (Node* x : else_list) {
-			delete x;
-		}
+		//delete[] arr;
+		//Node* temp;
+		//for (Node* x : else_list) {
+		//	delete x;
+		//}
 	}
 }
