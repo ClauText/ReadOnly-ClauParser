@@ -836,6 +836,7 @@ namespace wiz {
 		static bool __LoadData(const char* buffer, const long long* token_arr, long long token_arr_len, Node* _global, const wiz::LoadDataOption* _option,
 			int start_state, int last_state, Node** next, MemoryPool* _pool) // first, strVec.empty() must be true!!
 		{
+#ifdef USE_POOL
 			long long count_left = 0;
 			long long count_eq = 0;
 			long long count_ = 0;
@@ -857,7 +858,7 @@ namespace wiz {
 
 			// chk count_ - count_eq + count_left < 0 ?
 
-#ifdef USE_POOL
+
 			_pool->arr = new Node[1 + count_ - count_eq + count_left];
 			_pool->count = 0;
 			_pool->size = 1 + count_ - count_eq + count_left;
