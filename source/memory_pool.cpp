@@ -18,9 +18,10 @@ namespace wiz {
 		//
 	}
 	
-	void MemoryPool::Clear() {
+	void MemoryPool::Clear() { // maybe just one called....
 		if (arr) {
 			delete[] arr;
+			arr = nullptr;
 		}
 		for (Node* x : else_list) {
 			delete x;
