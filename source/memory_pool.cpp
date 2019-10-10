@@ -10,12 +10,7 @@ namespace wiz {
 		size = _size;
 	}
 	Node* MemoryPool::Get() {
-		if (size <= 0) {
-			return new Node();
-		}
-
-
-		if (count < size) {
+		if (size > 0 && count < size) {
 			count++;
 			return &arr[count - 1];
 		}
