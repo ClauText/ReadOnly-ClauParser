@@ -590,8 +590,8 @@ namespace wiz {
 		public:
 			Node* arr = nullptr;
 			std::list<Node*> else_list;
-			long long count;
-			long long size;
+			long long count = 0;
+			long long size = 0;
 		public:
 			MemoryPool() {
 				//
