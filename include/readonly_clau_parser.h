@@ -856,12 +856,17 @@ namespace wiz {
 				}
 			}
 
-			// chk count_ - count_eq + count_left < 0 ?
-
-
-			_pool->arr = new Node[1 + count_ - count_eq + count_left];
-			_pool->count = 0;
-			_pool->size = 1 + count_ - count_eq + count_left;
+			// todo - chk count_ - count_eq + count_left < 0 ?
+			if (count_ - count_eq + count_left < 0) {
+				_pool->arr = nullptr;
+				_pool->count = 0;
+				_pool->size = 0;
+			}
+			else {
+				_pool->arr = new Node[1 + count_ - count_eq + count_left];
+				_pool->count = 0;
+				_pool->size = 1 + count_ - count_eq + count_left;
+			}
 #else
 			_pool->arr = nullptr;
 			_pool->count = 0;
