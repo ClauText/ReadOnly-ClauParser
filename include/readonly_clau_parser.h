@@ -835,42 +835,49 @@ namespace wiz {
 		static bool __LoadData(const char* buffer, const long long* token_arr, long long token_arr_len, Node* _global, const wiz::LoadDataOption* _option,
 			int start_state, int last_state, Node** next, MemoryPool* _pool) // first, strVec.empty() must be true!!
 		{
-#ifdef USE_POOL
-			long long count_left = 0;
-			long long count_eq = 0;
-			long long count_ = 0;
+			{
+				long long count_left = 0;
+				long long count_right = 0;
+				long long count_eq = 0;
+				long long count_other = 0; // count_other
 
-			for (long long x = 0; x < token_arr_len; ++x) {
-				switch (Utility::GetType(token_arr[x]))
-				{
-				case 0:
-					count_++;
-					break;
-				case 1:
-					count_left++;
-					break;
-				case 3:
-					count_eq++;
-					break;
+				for (long long x = 0; x < token_arr_len; ++x) {
+					switch (Utility::GetType(token_arr[x]))
+					{
+					case 0:
+						count_other++;
+						break;
+					case 1:
+						count_left++;
+						break;
+					case 2:
+						count_right++;
+						break;
+					case 3:
+						count_eq++;
+						break;
+					}
+				}
+
+				// chk count_ - count_eq + count_left < 0 ? -
+				// count_ = count_other..
+				long long chkNum = count_other - count_eq + count_left;
+
+				if (count_right > count_left) {
+					chkNum += count_right - count_left;
+				}
+				if (chkNum < 0) {
+					_pool->arr = nullptr;
+					_pool->count = 0;
+					_pool->size = 0;
+				}
+				else {
+					_pool->arr = new Node[1 + chkNum];
+					_pool->count = 0;
+					_pool->size = 1 + chkNum;
 				}
 			}
 
-			// todo - chk count_ - count_eq + count_left < 0 ?
-			if (count_ - count_eq + count_left < 0) {
-				_pool->arr = nullptr;
-				_pool->count = 0;
-				_pool->size = 0;
-			}
-			else {
-				_pool->arr = new Node[1 + count_ - count_eq + count_left];
-				_pool->count = 0;
-				_pool->size = 1 + count_ - count_eq + count_left;
-			}
-#else
-			_pool->arr = nullptr;
-			_pool->count = 0;
-			_pool->size = 0;
-#endif
 			MemoryPool& pool = *_pool;
 
 			std::vector<long long> varVec;
