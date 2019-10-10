@@ -596,7 +596,6 @@ namespace wiz {
 			MemoryPool() {
 				//
 			}
-			MemoryPool(long long _size);
 		public:
 			Node* Get();
 		public:
