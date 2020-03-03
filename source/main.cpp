@@ -24,7 +24,7 @@ int main(void)
 	}
 	int b = clock();
 
-	//	wiz::LoadData::SaveWizDB(global, buffer, "output.eu4");
+		//wiz::LoadData::SaveWizDB(global, buffer, "output.eu4");
 
 		if (buffer) {
 			delete[] buffer;

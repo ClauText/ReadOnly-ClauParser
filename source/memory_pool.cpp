@@ -9,7 +9,9 @@ namespace wiz {
 			return &arr[count - 1];
 		}
 		else {
-			count++; // for number check..
+			// in real depth?  <= 10 ?
+			// static Node[10] and list<Node*> ?
+			count++; // for number check.
 			else_list.push_back(new Node());
 			return else_list.back();
 		}
