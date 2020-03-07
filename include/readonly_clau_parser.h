@@ -405,7 +405,6 @@ namespace wiz {
 		}
 	};
 
-
 	class InFileReserver
 	{
 	private:
@@ -488,7 +487,7 @@ namespace wiz {
 				int line_comment_start = 0;
 
 				arr[count] = length; // text[arr[count]] == '\0'
-				for (int i = 0; i <= count; ++i) {
+				for (long long i = 0; i <= count; ++i) {
 					const char ch = text[arr[i]];
 
 					if (0 == state) {
@@ -500,6 +499,32 @@ namespace wiz {
 							state = 1;
 
 							arr[_count] = arr[i];
+
+							// for abc"def"ghi
+							for (long long j = arr[i]; j >= 0; --j) {
+								bool pass = false;
+								switch (text[j]) {
+								case ' ':
+								case '\t':
+								case '\r':
+								case '\n':
+								case '\v':
+								case '\f':
+								case '\0':
+								case '{':
+								case '}':
+								case '=':
+									pass = true;
+									break;
+								}
+								if (pass) {
+									arr[_count] = j + 1;
+									break;
+								}
+								if (0 == j) {
+									arr[_count] = 0;
+								}
+							}
 							_count++;
 						}
 					}
@@ -511,6 +536,29 @@ namespace wiz {
 							state = 0;
 
 							arr[_count] = arr[i];
+
+							for (long long j = arr[i]; j <= length; ++j) {
+								bool pass = false;
+								switch (text[j]) {
+								case ' ':
+								case '\t':
+								case '\r':
+								case '\n':
+								case '\v':
+								case '\f':
+								case '\0':
+								case '{':
+								case '}':
+								case '=':
+									pass = true;
+									break;
+								}
+								if (pass) {
+									arr[_count] = j - 1;
+									break;
+								}
+							}
+
 							_count++;
 						}
 					}
@@ -662,14 +710,21 @@ namespace wiz {
 								last[i] = start[i];
 							}
 						}
+						bool pass = false;
 						for (; start_count < arr_count_size; start_count += 2) {
-							if (start[i] <= arr_count[start_count] && arr_count[start_count] < last[i]) {
+							if (!pass && start[i] <= arr_count[start_count] && arr_count[start_count] < last[i]) {
 								count[i] = start_count;
 
 								if (last[i] <= arr_count[count[i] + 1]) {
 									last[i] = arr_count[count[i] + 1] + 1;
 								}
-								break;
+								pass = true;
+							}
+							else if (arr_count[start_count] < last[i]) {
+								if (last[i] <= arr_count[start_count + 1]) {
+									last[i] = arr_count[start_count + 1] + 1;
+									break;
+								}
 							}
 							else if (arr_count[start_count] >= last[i]) {
 								break;
@@ -677,7 +732,6 @@ namespace wiz {
 						}
 					}
 				}
-
 				{
 					//	for (int i = 0; i < thr_num; ++i) {
 					//		std::cout << start[i] << " " << last[i] << "\n";
@@ -790,6 +844,8 @@ namespace wiz {
 			return x;
 		}
 	};
+
+
 
 
 	class Utility {
@@ -1360,7 +1416,7 @@ namespace wiz {
 			return -1;
 		}
 
-		static bool _LoadData(InFileReserver& reserver, Node* global, const wiz::LoadDataOption& option, char** _buffer, std::vector<wiz::MemoryPool>* _pool, const int lex_thr_num, const int parse_num) // first, strVec.empty() must be true!!
+		static bool _LoadData(InFileReserver& reserver, Node* global, const wiz::LoadDataOption option, char** _buffer, std::vector<wiz::MemoryPool>* _pool, const int lex_thr_num, const int parse_num) // first, strVec.empty() must be true!!
 		{
 			const int pivot_num = parse_num - 1;
 			char* buffer = nullptr;
